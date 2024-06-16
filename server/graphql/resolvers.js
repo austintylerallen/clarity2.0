@@ -11,16 +11,16 @@ const resolvers = {
   Query: {
     news: async () => {
       try {
-        console.log('Fetching news from GovTrack');
         const response = await axios.get('https://www.govtrack.us/api/v2/bill?sort=-introduced_date&congress=117');
-        console.log('GovTrack response:', response.data.objects);
+        if (response.status !== 200) {
+          throw new Error(`Failed to fetch news from GovTrack: ${response.statusText}`);
+        }
         return response.data.objects.map((bill) => ({
           id: bill.id.toString(),
           title: bill.title,
           content: bill.summary || 'No summary available.',
         }));
       } catch (error) {
-        console.error('Error fetching news:', error);
         throw new Error('Failed to fetch news');
       }
     },
@@ -37,7 +37,6 @@ const resolvers = {
           link: rep.person.link
         }));
       } catch (error) {
-        console.error('Error fetching representatives:', error);
         throw new Error('Failed to fetch representatives');
       }
     },
@@ -61,13 +60,15 @@ const resolvers = {
       });
       await user.save();
 
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
         expiresIn: '1d',
       });
 
       return {
+        id: user._id,
+        name: user.name,
+        email: user.email,
         token,
-        user,
       };
     },
     login: async (parent, { email, password }) => {
@@ -81,13 +82,15 @@ const resolvers = {
         throw new UserInputError('Invalid email or password');
       }
 
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
         expiresIn: '1d',
       });
 
       return {
+        id: user._id,
+        name: user.name,
+        email: user.email,
         token,
-        user,
       };
     },
   },
