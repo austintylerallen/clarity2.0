@@ -1,3 +1,4 @@
+// Register.js
 import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
@@ -6,12 +7,10 @@ import { useNavigate } from 'react-router-dom';
 const REGISTER_USER = gql`
   mutation RegisterUser($name: String!, $email: String!, $password: String!) {
     addUser(name: $name, email: $email, password: $password) {
+      id
+      name
+      email
       token
-      user {
-        id
-        name
-        email
-      }
     }
   }
 `;
@@ -27,14 +26,10 @@ const Register = ({ setIsAuthenticated }) => {
     e.preventDefault();
     try {
       const { data } = await registerUser({ variables: { name, email, password } });
-      if (data && data.addUser && data.addUser.token) {
-        console.log('User registered successfully:', data);
-        localStorage.setItem('token', data.addUser.token);
-        setIsAuthenticated(true);
-        navigate('/dashboard');
-      } else {
-        throw new Error('Failed to get the token from server response');
-      }
+      console.log('User registered successfully:', data);
+      localStorage.setItem('token', data.addUser.token);
+      setIsAuthenticated(true);
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error registering user:', error);
       alert(`Error registering user: ${error.message}`);
